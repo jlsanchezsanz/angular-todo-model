@@ -1,65 +1,59 @@
 import { Injectable } from "@angular/core";
+import { Model, ModelFactory } from "@angular-extensions/model";
+import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 import { Todo } from "./todo.model";
+
+const initialData: Todo[] = [];
 
 @Injectable({
   providedIn: "root"
 })
 export class TodoService {
-  private _todos: Todo[] = [
-    {
-      id: "123",
-      title: "New task 1",
-      isCompleted: false
-    },
-    {
-      id: "124",
-      title: "New task 2",
-      isCompleted: false
-    },
-    {
-      id: "125",
-      title: "New task 3",
-      isCompleted: false
-    },
-    {
-      id: "126",
-      title: "New task 4",
-      isCompleted: false
-    }
-  ];
+  private model: Model<Todo[]>;
 
-  constructor() {}
+  todos$: Observable<Todo[]>;
 
-  public set todos(_todos: Todo[]) {
-    this._todos = _todos;
+  public get completedTodos$(): Observable<Todo[]> {
+    return this.model.data$.pipe(
+      map((todos: Todo[]) => todos.filter(todo => todo.isCompleted))
+    );
+  }
+  public get uncompletedTodos$(): Observable<Todo[]> {
+    return this.model.data$.pipe(
+      map((todos: Todo[]) => todos.filter(todo => !todo.isCompleted))
+    );
   }
 
-  public get todos(): Todo[] {
-    return this._todos;
+  constructor(private modelFactory: ModelFactory<Todo[]>) {
+    this.model = this.modelFactory.create(initialData);
   }
 
-  public get uncompletedTodos(): Todo[] {
-    return this.todos.filter(todo => !todo.isCompleted);
+  addTodo(title: string) {
+    const todos = this.model.get();
+    const id = todos.length
+      ? `${parseInt(todos[todos.length - 1].id, 10) + 1}`
+      : "1";
+
+    todos.push({ id, title, isCompleted: false });
+
+    this.model.set(todos);
   }
 
-  public get completedTodos(): Todo[] {
-    return this.todos.filter(todo => todo.isCompleted);
+  setCompleted(id: string) {
+    const todos = this.model.get();
+    this.model.set(
+      todos.map(todo => {
+        if (todo.id === id) {
+          todo.isCompleted = true;
+        }
+        return todo;
+      })
+    );
   }
 
-  public addTodo(title: string): void {
-    this.todos.push({ id: "1", title, isCompleted: false });
-  }
-
-  public removeTodo(id: string): void {
-    this.todos = this.todos.filter(todo => todo.id !== id);
-  }
-
-  public setCompleted(id: string): void {
-    this.todos = this.todos.map(todo => {
-      if (todo.id === id) {
-        todo.isCompleted = true;
-      }
-      return todo;
-    });
+  removeTodo(id: string) {
+    const todos = this.model.get();
+    this.model.set(todos.filter(todo => todo.id !== id));
   }
 }

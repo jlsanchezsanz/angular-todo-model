@@ -5,7 +5,7 @@
 <h2>Uncompleted</h2>
 
 <ul>
-  <li *ngFor="let todo of todoService.uncompletedTodos">
+  <li *ngFor="let todo of todoService.uncompletedTodos$ | async">
     {{ todo.title }}
     <button (click)="onCompleteTodo(todo.id)">Complete</button>
     <button (click)="onRemoveTodo(todo.id)">Remove</button>
@@ -15,7 +15,7 @@
 <h2>Completed</h2>
 
 <ul>
-  <li *ngFor="let todo of todoService.completedTodos">
+  <li *ngFor="let todo of todoService.completedTodos$ | async">
     {{ todo.title }}
     <button (click)="onRemoveTodo(todo.id)">Remove</button>
   </li>
